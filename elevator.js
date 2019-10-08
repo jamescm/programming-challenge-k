@@ -67,15 +67,21 @@ export class Elevator {
     return this.floor === first(this.targets)
   }
 
+  calculateDirection(target) {
+    return compare(target, this.floor)
+  }
+
   move() {
     const nextFloor = this.floor + this.direction
     console.log(`Elevator ${this.id} moving to floor ${nextFloor}`)
 
+    console.log(this.targets, this.direction)
     setTimeout(() => {
       this.floor = nextFloor
 
       if (this.isAtTarget()) {
         this.targets.shift()
+        this.direction = this.calculateDirection(first(this.targets))
         console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
       }
 
@@ -107,7 +113,7 @@ export class Elevator {
 
     if (canTravel) {
       this.targets.unshift(target)
-      this.direction = compare(target, this.floor)
+      this.direction = this.calculateDirection(target)
       this.move()
     } else {
       console.log(`Elevator ${this.id} cannot travel to floor ${target}`)

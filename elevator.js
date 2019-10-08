@@ -10,6 +10,10 @@ const Priority = Object.freeze({
   LOW: 3
 })
 
+function compare(a, b) {
+  return Math.sign(a - b)
+}
+
 function between(x, min, max) {
   return x >= min && max >= x
 }
@@ -31,12 +35,17 @@ export class ElevatorController {
     }
   }
 
-
   getNextElevator(target) {
-    // Prioritize elevators by distance from target and current direction
-    const priorities = this.elevators.map(elevator => elevator.getPriority(target))
-    priorities.sort()
-    return first(priorities)
+    const priorities = this.elevators.map(elevator => ({
+      id: elevator.id,
+      priority: elevator.getPriority(target)
+    }))
+
+    // Ascending by priority
+    priorities.sort((a, b) => compare(a.priority, b.priority))
+
+    const winner = first(priorities)
+    return this.elevators[winner.id]
   }
 
   call(target) {
@@ -54,6 +63,10 @@ export class Elevator {
     this.moveTime = moveTime
   }
 
+  isAtTarget() {
+    return this.floor === first(this.targets)
+  }
+
   move() {
     const nextFloor = this.floor + this.direction
     console.log(`Elevator ${this.id} moving to floor ${nextFloor}`)
@@ -61,13 +74,15 @@ export class Elevator {
     setTimeout(() => {
       this.floor = nextFloor
 
-      if (this.floor === this.targets[0]) {
+      if (this.isAtTarget()) {
         this.targets.shift()
         console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
       }
 
       if (this.targets.length) {
         this.move()
+      } else {
+        this.state = Direction.NONE
       }
     }, this.moveTime)
   }
@@ -92,7 +107,7 @@ export class Elevator {
 
     if (canTravel) {
       this.targets.unshift(target)
-      this.direction = Math.sign(target - this.floor)
+      this.direction = compare(target, this.floor)
       this.move()
     } else {
       console.log(`Elevator ${this.id} cannot travel to floor ${target}`)

@@ -1,5 +1,3 @@
-import { Elevator } from './elevator.js'
+import { ElevatorController } from './elevator.js'
 
-const elevator = new Elevator(1, 10)
-
-elevator.call(0)
+const controller = new ElevatorController({ numOfElevators: 10, maxFloor: 10 })

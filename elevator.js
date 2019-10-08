@@ -8,8 +8,36 @@ function between(x, min, max) {
   return x >= min && max >= x
 }
 
+function last(arr = []) {
+  return arr[arr.length - 1]
+}
+
+function first(arr = []) {
+  return arr[0]
+}
+
+export class ElevatorController {
+  constructor({ numOfElevators, maxFloor, moveTime } = {}) {
+    this.elevators = []
+
+    for(let i = 0; i < numOfElevators; i++) {
+      this.elevators.push(new Elevator({ i, maxFloor, moveTime }))
+    }
+  }
+
+
+  getNextElevator(target) {
+    // Prioritize elevators by distance from target and current direction
+    return first(this.elevators)
+  }
+
+  call(target) {
+    this.getNextElevator(target).call(target)
+  }
+}
+
 export class Elevator {
-  constructor(id, maxFloor, moveTime = 1000) {
+  constructor({ id, maxFloor, moveTime = 1000 } = {}) {
     this.id = id
     this.floor = 8
     this.targets = []
@@ -46,12 +74,16 @@ export class Elevator {
   }
 
   call(target) {
-    if (this.isOnTheWay(target) && this.isWithinFloorRange(target)) {
+    const canTravel = this.isOnTheWay(target) && this.isWithinFloorRange(target)
+
+    if (canTravel) {
       this.targets.unshift(target)
       this.direction = Math.sign(target - this.floor)
       this.move()
     } else {
       console.log(`Elevator ${this.id} cannot travel to floor ${target}`)
     }
+
+    return canTravel
   }
 }

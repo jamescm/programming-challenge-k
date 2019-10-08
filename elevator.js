@@ -11,7 +11,7 @@ function between(x, min, max) {
 export class Elevator {
   constructor(id, maxFloor, moveTime = 1000) {
     this.id = id
-    this.floor = 1
+    this.floor = 8
     this.targets = []
     this.direction = Direction.NONE
     this.maxFloor = maxFloor
@@ -36,11 +36,22 @@ export class Elevator {
     }, this.moveTime)
   }
 
+  isWithinFloorRange(target) {
+    return between(target, 1, this.maxFloor)
+  }
+
+  isOnTheWay(target) {
+    return this.direction === Direction.NONE ||
+      between(target, this.floor, last(this.targets))
+  }
+
   call(target) {
-    if (this.direction === Direction.NONE || between(target, this.floor, last(this.targets))) {
+    if (this.isOnTheWay(target) && this.isWithinFloorRange(target)) {
       this.targets.unshift(target)
       this.direction = Math.sign(target - this.floor)
       this.move()
+    } else {
+      console.log(`Elevator ${this.id} cannot travel to floor ${target}`)
     }
   }
 }

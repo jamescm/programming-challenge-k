@@ -4,6 +4,12 @@ const Direction = Object.freeze({
   UP: 1
 })
 
+const Priority = Object.freeze({
+  HIGH: 1,
+  AVERAGE: 2,
+  LOW: 3
+})
+
 function between(x, min, max) {
   return x >= min && max >= x
 }
@@ -20,15 +26,17 @@ export class ElevatorController {
   constructor({ numOfElevators, maxFloor, moveTime } = {}) {
     this.elevators = []
 
-    for(let i = 0; i < numOfElevators; i++) {
-      this.elevators.push(new Elevator({ i, maxFloor, moveTime }))
+    for(let id = 0; id < numOfElevators; id++) {
+      this.elevators.push(new Elevator({ id, maxFloor, moveTime }))
     }
   }
 
 
   getNextElevator(target) {
     // Prioritize elevators by distance from target and current direction
-    return first(this.elevators)
+    const priorities = this.elevators.map(elevator => elevator.getPriority(target))
+    priorities.sort()
+    return first(priorities)
   }
 
   call(target) {
@@ -39,7 +47,7 @@ export class ElevatorController {
 export class Elevator {
   constructor({ id, maxFloor, moveTime = 1000 } = {}) {
     this.id = id
-    this.floor = 8
+    this.floor = 1
     this.targets = []
     this.direction = Direction.NONE
     this.maxFloor = maxFloor
@@ -62,6 +70,12 @@ export class Elevator {
         this.move()
       }
     }, this.moveTime)
+  }
+
+  getPriority(target) {
+    if (this.floor === target) return Priority.HIGH
+    else if (this.isOnTheWay(target)) return Priority.AVERAGE
+    else return Priority.LOW
   }
 
   isWithinFloorRange(target) {

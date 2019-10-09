@@ -6,12 +6,16 @@ const Direction = Object.freeze({
 
 const Priority = Object.freeze({
   HIGH: 1,
-  AVERAGE: 2,
-  LOW: 3
+  AVERAGE: 10,
+  LOW: 30
 })
 
 function compare(a, b) {
   return Math.sign(a - b)
+}
+
+function diff(a, b) {
+  return Math.abs(a - b)
 }
 
 function between(x, min, max) {
@@ -54,13 +58,16 @@ export class ElevatorController {
 }
 
 export class Elevator {
-  constructor({ id, maxFloor, moveTime = 1000 } = {}) {
+  constructor({ id, maxFloor, moveTime = 1000, maintenanceTime = 5000 } = {}) {
     this.id = id
     this.floor = 1
     this.targets = []
     this.direction = Direction.NONE
     this.maxFloor = maxFloor
     this.moveTime = moveTime
+    this.floorsTravelled = 0
+    this.trips = 0
+    this.maintenanceTime = maintenanceTime
   }
 
   isAtTarget() {
@@ -71,23 +78,33 @@ export class Elevator {
     return compare(target, this.floor)
   }
 
+  setMaintenance() {
+  }
+
   move() {
     const nextFloor = this.floor + this.direction
     console.log(`Elevator ${this.id} moving to floor ${nextFloor}`)
 
-    console.log(this.targets, this.direction)
     setTimeout(() => {
       this.floor = nextFloor
+      this.floorsTravelled++
 
       if (this.isAtTarget()) {
         this.targets.shift()
-        this.direction = this.calculateDirection(first(this.targets))
+        this.direction = Direction.NONE
         console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
+
+        return setTimeout(() => {
+        console.log(`Elevator ${this.id} closing doors on floor ${this.floor}`)
+          this.direction = this.calculateDirection(first(this.targets))
+          this.move()
+        }, this.moveTime)
       }
 
       if (this.targets.length) {
         this.move()
       } else {
+        this.trips++
         this.state = Direction.NONE
       }
     }, this.moveTime)
@@ -95,8 +112,8 @@ export class Elevator {
 
   getPriority(target) {
     if (this.floor === target) return Priority.HIGH
-    else if (this.isOnTheWay(target)) return Priority.AVERAGE
-    else return Priority.LOW
+    const priority = this.isOnTheWay(target) ? Priority.AVERAGE : Priority.LOW
+    return priority + diff(this.floor, target)
   }
 
   isWithinFloorRange(target) {

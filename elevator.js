@@ -44,7 +44,7 @@ export class ElevatorController {
     const priorities = this.elevators.map(elevator => ({
       id: elevator.id,
       priority: elevator.getPriority(target)
-    }))
+    })).filter(elevator => elevator.priority !== Infinity)
 
     // Ascending by priority
     priorities.sort((a, b) => compare(a.priority, b.priority))
@@ -102,7 +102,8 @@ export class Elevator {
         this.targets.shift()
         this.direction = this.calculateDirection(first(this.targets))
         console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
-        this.canMove = true
+        this.canMove = false
+
         return setTimeout(() => {
           console.log(`Elevator ${this.id} closing doors on floor ${this.floor}`)
           this.canMove = true

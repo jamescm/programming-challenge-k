@@ -6,6 +6,6 @@ controller.call(8)
 
 const sleep = t => new Promise(r => setTimeout(r, t))
 
-sleep(3001).then(() => controller.call(3))
+sleep(3001).then(() => controller.call(2))
 sleep(4001).then(() => controller.call(1))
 sleep(8001).then(() => controller.call(6))

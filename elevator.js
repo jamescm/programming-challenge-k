@@ -59,7 +59,7 @@ export class ElevatorController {
 }
 
 export class Elevator {
-  constructor({ id, maxFloor, moveTime = 1000, maintenanceTime = 5000 } = {}) {
+  constructor({ id, maxFloor, moveTime = 1000, maintenanceTime = 5000 , tripsUntilMaintenance = 100} = {}) {
     this.id = id
     this.floor = 1
     this.targets = []
@@ -70,6 +70,7 @@ export class Elevator {
     this.trips = 0
     this.canMove = true
     this.maintenanceTime = maintenanceTime
+    this.tripsUntilMaintenance = tripsUntilMaintenance
   }
 
   isAtTarget() {
@@ -90,33 +91,45 @@ export class Elevator {
     }, this.maintenanceTime)
   }
 
+  nextFloor() {
+    this.floor += this.direction
+    this.floorsTravelled++
+  }
+
+  hasQueuedTargets() {
+    return this.targets.length
+  }
+
+  arriveAtTarget() {
+    this.targets.shift()
+    this.direction = this.calculateDirection(first(this.targets))
+    console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
+    this.canMove = false
+
+    return setTimeout(() => {
+      console.log(`Elevator ${this.id} closing doors on floor ${this.floor}`)
+      this.canMove = true
+      this.move()
+    }, this.moveTime)
+  }
+
   move() {
     const nextFloor = this.floor + this.direction
     console.log(`Elevator ${this.id} moving to floor ${nextFloor}`)
 
     setTimeout(() => {
-      this.floor = nextFloor
-      this.floorsTravelled++
+      this.nextFloor()
 
       if (this.isAtTarget()) {
-        this.targets.shift()
-        this.direction = this.calculateDirection(first(this.targets))
-        console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
-        this.canMove = false
-
-        return setTimeout(() => {
-          console.log(`Elevator ${this.id} closing doors on floor ${this.floor}`)
-          this.canMove = true
-          this.move()
-        }, this.moveTime)
+        this.arriveAtTarget()
       }
 
-      if (this.targets.length) {
+      if (this.hasQueuedTargets()) {
         this.move()
       } else {
         this.trips++
         this.state = Direction.NONE
-        if (this.trips >= 100) {
+        if (this.trips >= this.tripsUntilMaintenance) {
           this.setMaintenance()
         }
       }

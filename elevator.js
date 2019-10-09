@@ -81,6 +81,13 @@ export class Elevator {
   }
 
   setMaintenance() {
+    this.canMove = false
+    console.log(`Elevator ${this.id} is in maintenance`)
+
+    setTimeout(() => {
+      console.log(`Elevator ${this.id} completed maintenance`)
+      this.canMove = true
+    }, this.maintenanceTime)
   }
 
   move() {
@@ -108,6 +115,9 @@ export class Elevator {
       } else {
         this.trips++
         this.state = Direction.NONE
+        if (this.trips >= 100) {
+          this.setMaintenance()
+        }
       }
     }, this.moveTime)
   }

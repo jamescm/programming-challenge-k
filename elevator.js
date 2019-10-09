@@ -7,7 +7,8 @@ const Direction = Object.freeze({
 const Priority = Object.freeze({
   HIGH: 1,
   AVERAGE: 10,
-  LOW: 30
+  LOW: 30,
+  NEVER: Infinity
 })
 
 function compare(a, b) {
@@ -67,6 +68,7 @@ export class Elevator {
     this.moveTime = moveTime
     this.floorsTravelled = 0
     this.trips = 0
+    this.canMove = true
     this.maintenanceTime = maintenanceTime
   }
 
@@ -91,12 +93,12 @@ export class Elevator {
 
       if (this.isAtTarget()) {
         this.targets.shift()
-        this.direction = Direction.NONE
+        this.direction = this.calculateDirection(first(this.targets))
         console.log(`Elevator ${this.id} opening doors on floor ${this.floor}`)
-
+        this.canMove = true
         return setTimeout(() => {
-        console.log(`Elevator ${this.id} closing doors on floor ${this.floor}`)
-          this.direction = this.calculateDirection(first(this.targets))
+          console.log(`Elevator ${this.id} closing doors on floor ${this.floor}`)
+          this.canMove = true
           this.move()
         }, this.moveTime)
       }
@@ -111,6 +113,7 @@ export class Elevator {
   }
 
   getPriority(target) {
+    if (!this.canMove) return Priority.NEVER
     if (this.floor === target) return Priority.HIGH
     const priority = this.isOnTheWay(target) ? Priority.AVERAGE : Priority.LOW
     return priority + diff(this.floor, target)
